@@ -1,0 +1,102 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.0'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.flywaydb.flyway' version '10.8.1'
+    id 'war' // WAR 파일 생성을 위한 플러그인
+}
+
+group = 'com.investmentdiary'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '17'
+}
+
+// Java 컴파일 시 파라미터 이름 정보 보존 (Spring @RequestParam 등에서 사용)
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['-parameters']
+}
+
+// WAR 설정
+war {
+    enabled = true
+    archiveBaseName = 'api'
+    archiveVersion = ''
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot Starters
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    
+    // Database
+    implementation 'com.mysql:mysql-connector-j:8.2.0'
+    implementation 'org.mariadb.jdbc:mariadb-java-client:3.3.0' // MariaDB 드라이버
+    implementation 'com.h2database:h2' // H2 인메모리 데이터베이스
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
+    
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    
+    // WebAuthn
+    // Note: 현재는 기본 WebAuthn 로직을 직접 구현하므로 webauthn4j 라이브러리는 선택적입니다.
+    // 필요시 webauthn4j-core만 사용하여 검증 로직을 강화할 수 있습니다.
+    // implementation 'com.webauthn4j:webauthn4j-core:0.22.0.RELEASE'
+    
+    // Message Queue (RabbitMQ)
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    
+    // Swagger/OpenAPI
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+    
+    // Utilities
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.testcontainers:mysql:1.19.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation 'ch.qos.logback:logback-classic:1.4.11'
+    
+    // Development
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// Flyway 설정 (MariaDB용)
+flyway {
+    url = 'jdbc:mariadb://192.168.0.100:3306/investment_diary'
+    user = 'investment_app'
+    password = 'strong_password_here'
+    locations = ['classpath:database']
+} 

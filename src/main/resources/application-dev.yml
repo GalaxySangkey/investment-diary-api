@@ -1,0 +1,118 @@
+spring:
+  # 데이터베이스 (비밀번호·호스트는 환경 변수 또는 application-local.yml)
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:investment_diary}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # JPA 설정 (개발용)
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Flyway 설정
+  flyway:
+    enabled: true
+    locations: classpath:database
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: ${REDIS_TIMEOUT:2000ms}
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX_ACTIVE:8}
+          max-idle: ${REDIS_POOL_MAX_IDLE:8}
+          min-idle: ${REDIS_POOL_MIN_IDLE:0}
+          max-wait: ${REDIS_POOL_MAX_WAIT:-1ms}
+
+  cache:
+    type: simple
+    cache-names: stockCache, userCache
+
+# JWT / 암호화 — 운영·공유 저장소에는 비밀 값 두지 말 것. 로컬은 application-local.yml
+jwt:
+  secret: ${JWT_SECRET:change_me_in_env_at_least_256_bits}
+  access-token-validity: 86400
+  refresh-token-validity: 604800
+  issuer: investment-diary-api
+
+encryption:
+  key: ${ENCRYPTION_KEY:change_me_in_env_at_least_256_bits}
+  algorithm: AES/CBC/PKCS5Padding
+
+# API 설정
+api:
+  version: v1
+  base-path: /api/v1
+  rate-limit:
+    default: 100
+    premium: 500
+    admin: 1000
+
+# Market Data Provider 설정 (개발용)
+market-data:
+  provider-order: ${MARKET_DATA_PROVIDER_ORDER:yahoo-direct,alpha-vantage}
+  timeout-ms: ${MARKET_DATA_TIMEOUT_MS:10000}
+  retry-count: ${MARKET_DATA_RETRY_COUNT:1}
+  rate-limit-per-minute: ${MARKET_DATA_RATE_LIMIT_PER_MINUTE:60}
+  python-fallback-enabled: ${MARKET_DATA_PYTHON_FALLBACK_ENABLED:false}
+  alpha-vantage:
+    api-key: ${ALPHA_VANTAGE_API_KEY:}
+
+# 로깅 설정 (개발용)
+logging:
+  level:
+    com.investmentdiary: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# 서버 설정 (개발용) — 포트는 SERVER_PORT 또는 application-local.yml
+server:
+  port: ${SERVER_PORT:8081}
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+
+# Swagger 설정
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  info:
+    title: 투자일지 API (개발용)
+    description: 투자일지 애플리케이션 REST API - 개발 환경
+    version: 1.0.0-dev
+    contact:
+      name: Investment Diary Team
+      email: support@investmentdiary.com

@@ -1,0 +1,203 @@
+spring:
+  application:
+    name: investment-diary-api
+  profiles:
+    active: local
+
+  # 데이터베이스 설정
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:investment_diary}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:investment_app}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: none  # Flyway가 스키마를 관리하므로 Hibernate는 스키마 변경을 하지 않음
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  
+  # Flyway 설정
+  flyway:
+    enabled: true
+    locations: classpath:database
+    baseline-on-migrate: true
+    validate-on-migrate: false  # 임시로 검증 비활성화 (이미 실행된 마이그레이션 스크립트 변경 시)
+    repair-on-migrate: true  # 체크섬 불일치 시 자동 수정
+    # Flyway 9.0+ 에서는 ignore-migration-patterns 사용
+    # 누락된 마이그레이션과 미래 마이그레이션 무시
+    ignore-migration-patterns: 
+      - "*:missing"
+      - "*:future"
+    clean-disabled: true  # clean 명령 비활성화 (안전)
+    # 실패한 마이그레이션 처리: repair 명령으로 정리 필요
+  
+  # Redis 설정 (환경 변수로 설정)
+  # 필수 환경 변수: REDIS_HOST (Redis 호스트 주소)
+  # 선택 환경 변수: REDIS_PORT, REDIS_PASSWORD, REDIS_DATABASE 등
+  # Redis를 사용하려면 REDIS_HOST 환경 변수를 반드시 설정하세요
+  # REDIS_HOST가 비어있거나 설정되지 않으면 Redis 자동 구성이 비활성화됩니다
+  data:
+    redis:
+      host: ${REDIS_HOST:} # 설정하지 않으면 빈 문자열(비활성화)
+      port: ${REDIS_PORT:6379} # Redis 포트
+      password: ${REDIS_PASSWORD:} # Redis 비밀번호 (없으면 빈 문자열)
+      database: ${REDIS_DATABASE:0} # Redis 데이터베이스 번호
+      timeout: ${REDIS_TIMEOUT:2000ms} # Redis 연결 타임아웃
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX_ACTIVE:8} # 최대 활성 연결 수
+          max-idle: ${REDIS_POOL_MAX_IDLE:8} # 최대 유휴 연결 수
+          min-idle: ${REDIS_POOL_MIN_IDLE:0} # 최소 유휴 연결 수
+          max-wait: ${REDIS_POOL_MAX_WAIT:-1ms} # 최대 대기 시간
+  
+  # RabbitMQ 자동 구성 (QUEUE_TYPE=rabbitmq이고 RABBITMQ_HOST가 설정되어 있을 때만 활성화)
+  rabbitmq:
+    host: ${RABBITMQ_HOST:}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+  
+  # 캐시 설정 (Redis가 없으면 simple 캐시 사용)
+  cache:
+    type: ${CACHE_TYPE:simple} # simple 또는 redis
+    redis:
+      time-to-live: ${CACHE_TTL:300000} # 5분
+      cache-null-values: false
+
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET:change_me_in_env_at_least_256_bits}
+  access-token-validity: 86400 # 24시간 (초)
+  refresh-token-validity: 604800 # 7일 (초)
+  issuer: investment-diary-api
+
+# 암호화 설정
+encryption:
+  key: ${ENCRYPTION_KEY:change_me_in_env_at_least_256_bits}
+  algorithm: AES/CBC/PKCS5Padding
+
+# WebAuthn 설정
+webauthn:
+  rp:
+    id: ${WEBAUTHN_RP_ID:localhost} # Relying Party ID (도메인, 예: localhost, example.com)
+    name: ${WEBAUTHN_RP_NAME:투자일지} # Relying Party 이름
+  origin: ${WEBAUTHN_ORIGIN:http://localhost:3000} # 프론트엔드 Origin
+  timeout: ${WEBAUTHN_TIMEOUT:60000} # Challenge 타임아웃 (밀리초, 기본 60초)
+  challenge-size: ${WEBAUTHN_CHALLENGE_SIZE:32} # Challenge 크기 (바이트)
+  challenge:
+    ttl: ${WEBAUTHN_CHALLENGE_TTL:300} # Challenge TTL (초, 기본 5분)
+    # Redis는 REDIS_HOST 환경 변수로 자동 활성화됩니다
+
+# 메시지 큐 설정 (환경 변수로 설정)
+# QUEUE_TYPE: rabbitmq, redis, memory (기본값: memory)
+# 중요: 모든 요청은 DB에 저장되므로 메시지 큐가 소실되어도 안전합니다.
+# - DB 저장: 영구 저장 (서버 재시작 시에도 유지)
+# - 메시지 큐: 빠른 처리 (선택적, 서버 재시작 시 Memory 큐는 소실되지만 DB에서 복구)
+# - QueueConsumer: DB에서 PENDING 요청을 주기적으로 확인하여 처리
+queue:
+  type: ${QUEUE_TYPE:memory} # rabbitmq, redis, memory
+  name: ${QUEUE_NAME:api_requests} # 큐 이름
+  durable: ${QUEUE_DURABLE:true} # 큐 지속성 (RabbitMQ/Redis에서만 적용)
+  max-retries: ${QUEUE_MAX_RETRIES:3} # 최대 재시도 횟수
+  retry-delay: ${QUEUE_RETRY_DELAY:5000} # 재시도 지연 시간 (밀리초)
+  
+  # RabbitMQ 설정 (QUEUE_TYPE=rabbitmq일 때 사용)
+  rabbitmq:
+    host: ${RABBITMQ_HOST:}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+  
+  # Redis 설정은 기존 REDIS_HOST 환경 변수 활용
+  processing-timeout: ${QUEUE_PROCESSING_TIMEOUT:30} # 처리 타임아웃 (분)
+
+# API 설정
+api:
+  version: v1
+  base-path: /api/v1
+  rate-limit:
+    default: 100 # 분당 요청 수
+    premium: 500
+    admin: 1000
+
+# 문의하기 공개 API — IP 기준 슬라이딩 윈도우 (단일 인스턴스; 다중 노드 시 Redis 등 검토)
+contact:
+  inquiry:
+    rate-limit:
+      enabled: true
+      max-requests-per-window: ${CONTACT_INQUIRY_RATE_MAX:5}
+      window-minutes: ${CONTACT_INQUIRY_RATE_WINDOW_MINUTES:15}
+
+# Market Data Provider 설정
+market-data:
+  provider-order: ${MARKET_DATA_PROVIDER_ORDER:yahoo-direct,alpha-vantage}
+  timeout-ms: ${MARKET_DATA_TIMEOUT_MS:10000}
+  retry-count: ${MARKET_DATA_RETRY_COUNT:2}
+  rate-limit-per-minute: ${MARKET_DATA_RATE_LIMIT_PER_MINUTE:60}
+  python-fallback-enabled: ${MARKET_DATA_PYTHON_FALLBACK_ENABLED:false}
+  alpha-vantage:
+    api-key: ${ALPHA_VANTAGE_API_KEY:}
+  yahoo:
+    # constraints.md: 종가 API 호출 간 최소 500ms — Yahoo 429 방지용 기본값 550ms
+    min-interval-ms: ${MARKET_DATA_YAHOO_MIN_INTERVAL_MS:550}
+    batch-delay-ms: ${MARKET_DATA_YAHOO_BATCH_DELAY_MS:550}
+    max-retries-on-429: ${MARKET_DATA_YAHOO_MAX_RETRIES_ON_429:4}
+    user-agent: ${MARKET_DATA_YAHOO_USER_AGENT:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36}
+
+# 로깅 설정
+logging:
+  level:
+    com.investmentdiary: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/investment-diary-api.log
+    max-size: 10MB
+    max-history: 30
+
+# 서버 설정 (이클립스 톰캣용 - context-path 제거)
+server:
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+
+# CORS 설정은 CorsFilter에서 처리
+
+# Swagger 설정
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    enabled: true
+  info:
+    title: 투자일지 API
+    description: 투자일지 애플리케이션 REST API
+    version: 1.0.0
+    contact:
+      name: Investment Diary Team
+      email: support@investmentdiary.com
+

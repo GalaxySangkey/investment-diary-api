@@ -1,0 +1,35 @@
+# 이 파일을 복사하여 application-local.yml 로 저장하세요.
+# application-local.yml 은 .gitignore 되어 Git에 올라가지 않습니다.
+#
+# 실행 예 (PowerShell):
+#   $env:SPRING_PROFILES_ACTIVE="dev,local"
+#   .\gradlew.bat bootRun
+#
+# 또는 IDE Run Configuration → Active profiles: dev,local
+
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:investment_diary}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:CHANGE_ME}
+
+  data:
+    redis:
+      host: ${REDIS_HOST:}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+jwt:
+  secret: ${JWT_SECRET:CHANGE_ME_AT_LEAST_256_BITS}
+
+encryption:
+  key: ${ENCRYPTION_KEY:CHANGE_ME_AT_LEAST_256_BITS}
+
+server:
+  port: ${SERVER_PORT:8081}
