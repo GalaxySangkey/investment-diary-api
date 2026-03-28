@@ -20,7 +20,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.http.HttpMethod;
+import org.springframework.beans.factory.annotation.Value;
+
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -29,11 +33,14 @@ public class SecurityConfig {
     
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final String corsAllowedOriginsRaw;
     
     public SecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, 
-                         JwtAuthenticationFilter jwtAuthenticationFilter) {
+                         JwtAuthenticationFilter jwtAuthenticationFilter,
+                         @Value("${app.cors.allowed-origins}") String corsAllowedOriginsRaw) {
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.corsAllowedOriginsRaw = corsAllowedOriginsRaw;
     }
     
     @Bean
@@ -107,13 +114,16 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         // 쿠키 사용 시 credentials를 true로 설정하고, 특정 origin만 허용
         // setAllowCredentials(true)일 때는 와일드카드(*)를 사용할 수 없으므로 정확한 origin 지정 필요
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",
-            "http://localhost:3001",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:3001"
-        ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
+        List<String> allowedOrigins = Arrays.stream(corsAllowedOriginsRaw.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+        if (allowedOrigins.isEmpty()) {
+            throw new IllegalStateException(
+                    "app.cors.allowed-origins is empty; set CORS_ALLOWED_ORIGINS or app.cors.allowed-origins in configuration.");
+        }
+        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "HEAD"));
         // 쿠키 사용 시 필요한 헤더 명시
         configuration.setAllowedHeaders(Arrays.asList(
             "Content-Type",

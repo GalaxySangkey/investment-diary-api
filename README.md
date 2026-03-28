@@ -47,10 +47,8 @@
 - 기간별 자산 변화 계산
 - 순수 현금 잔액 계산
 
-### 👥 **커뮤니티**
-- 투자 관련 게시글 작성/조회
-- 댓글 시스템
-- 사용자 레벨링 및 포인트
+### 👥 **커뮤니티 (REST API 미구현)**
+- DB·엔티티에 게시글/댓글·레벨/포인트 등이 일부 반영되어 있으나, **공개 REST 엔드포인트(`CommunityController`)는 없습니다.** 향후 구현 시 API 명세·Swagger를 기준으로 추가하면 됩니다.
 
 ### 📬 **메시지 큐 시스템**
 - API 요청을 큐로 처리하여 서버 장애 시 요청 누락 방지
@@ -166,8 +164,8 @@ investment-diary-api/
 │   │   ├── StockDividend.java          # 주식 배당 엔티티
 │   │   ├── ExchangeRate.java           # 환율 엔티티
 │   │   ├── StockTickerMapping.java     # 종목코드-티커 매핑 엔티티
-│   │   ├── CommunityPost.java          # 커뮤니티 게시글 엔티티
-│   │   ├── CommunityComment.java       # 커뮤니티 댓글 엔티티
+│   │   ├── CommunityPost.java          # 커뮤니티 게시글 엔티티 (REST API 미구현)
+│   │   ├── CommunityComment.java       # 커뮤니티 댓글 엔티티 (REST API 미구현)
 │   │   ├── UserLevel.java              # 사용자 레벨 엔티티
 │   │   ├── PointHistory.java           # 포인트 히스토리 엔티티
 │   │   └── Notification.java           # 알림 엔티티
@@ -278,6 +276,14 @@ REDIS_PORT=6379
 REDIS_PASSWORD=
 ```
 
+**선택 환경 변수 (CORS):**
+```bash
+# 프론트 origin을 쉼표로 나열 (쿠키 인증 시 * 사용 불가). 생략 시 로컬 React 기본 origin들이 적용됩니다.
+CORS_ALLOWED_ORIGINS=http://localhost:3000,https://your-app.example.com
+```
+
+또는 `application.yml`의 `app.cors.allowed-origins` 를 직접 수정해도 됩니다.
+
 #### **application.yml 설정 (대안)**
 환경 변수를 사용하지 않는 경우 `src/main/resources/application.yml` 파일을 수정하세요.
 
@@ -310,7 +316,7 @@ REDIS_PASSWORD=
 - **API 문서**: `http://localhost:8080/v3/api-docs`
 
 ### **API 명세서**
-자세한 API 명세는 [API_SPECIFICATION.md](./API_SPECIFICATION.md) 파일을 참조하세요.
+엔드포인트·요청 형식은 [API_SPECIFICATION.md](./API_SPECIFICATION.md)와 **Swagger UI**를 함께 참고하세요. (수정·삭제는 PUT/DELETE 대신 POST 전용 URL을 사용합니다.)
 
 ## 📊 데이터베이스 마이그레이션
 
@@ -357,10 +363,11 @@ Windows에서는 `gradlew.bat flywayMigrate`를 사용합니다.
 - **역할 기반 접근 제어**: Spring Security 사용
 
 ### **REST-like API 보안 정책**
-- **GET**: 데이터 조회만 허용
-- **POST**: 모든 생성, 수정, 삭제 작업 처리
-- **PUT/PATCH/DELETE 사용 금지**: 보안상의 이유로 사용하지 않음
-- **장점**: 방화벽, 프록시 서버에서 HTTP 메서드 제한 시에도 안정적 동작
+- **GET**: 데이터 조회
+- **POST**: 생성뿐 아니라 수정·삭제도 **전용 경로**로 처리 (예: `POST .../update`, `POST .../delete`, `POST /api/v1/investments/update` 등). **PUT·PATCH·DELETE 메서드는 컨트롤러에서 사용하지 않습니다.**
+- **CORS**: 허용 **HTTP 메서드**는 **GET, POST, OPTIONS, HEAD** 만입니다. 허용 **Origin** 목록은 환경 변수 **`CORS_ALLOWED_ORIGINS`**(쉼표 구분) 또는 `application.yml`의 **`app.cors.allowed-origins`** 로 설정합니다. (기본값은 로컬 React용 origin.) 자세한 예시는 위 **「선택 환경 변수 (CORS)」** 절을 참고하세요.
+- **장점**: 방화벽·프록시에서 메서드가 제한된 환경에서도 동작하기 쉽습니다.
+- **상세 경로**: [API_SPECIFICATION.md](./API_SPECIFICATION.md) 및 기동 후 **Swagger UI**(`/swagger-ui.html`)를 참고하세요.
 
 ## 🧪 테스트
 
@@ -406,8 +413,7 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 - **user_levels**: 사용자 레벨 및 포인트 (current_points, experience 등)
 - **point_history**: 포인트 히스토리 (type, balance_after 등)
 - **notifications**: 알림 (type, title, is_read 등)
-- **community_posts**: 커뮤니티 게시글
-- **community_comments**: 커뮤니티 댓글
+- **community_posts**, **community_comments**: 스키마에 있을 수 있으나 **현재 REST API 없음**
 - **asset_settings**: 자산 설정 (start_date, initial_balance, savings, investment_seed 등)
 - **monthly_actual_balances**: 월별 실제 금액 (year, month, actual_balance, difference, **investment_seed_addition**)
 - **fixed_incomes**: 고정 수입 (name, amount, day, start_date, end_date)
@@ -711,8 +717,8 @@ ENTRYPOINT ["java", "-jar", "/app.jar"]
 
 ## 📞 문의
 
-- **이메일**: dev@investmentdiary.com
-- **프로젝트 링크**: [https://github.com/your-username/investment-diary-api](https://github.com/your-username/investment-diary-api)
+- **이메일**: fstarhw01@naver.com
+- **프로젝트 링크**: [https://github.com/GalaxySangkey/investment-diary-api](https://github.com/GalaxySangkey/investment-diary-api)
 
 ## 🙏 감사의 말
 

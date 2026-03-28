@@ -182,7 +182,11 @@ server:
     enabled: true
     mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
 
-# CORS 설정은 CorsFilter에서 처리
+# CORS: SecurityConfig에서 사용. 쿠키(credentials) 사용 시 origin은 * 불가 → 쉼표로 나열
+# 환경 변수 CORS_ALLOWED_ORIGINS 로 덮어쓰기 (예: https://app.example.com,http://localhost:3000)
+app:
+  cors:
+    allowed-origins: "${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001}"
 
 # Swagger 설정
 springdoc:

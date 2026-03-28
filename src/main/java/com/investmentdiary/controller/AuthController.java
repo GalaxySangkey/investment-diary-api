@@ -4,11 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -918,8 +916,8 @@ public class AuthController {
         }
     }
     
-    @PutMapping("/webauthn/credentials/{credentialId}/name")
-    @Operation(summary = "패스키 이름 수정", description = "등록된 패스키의 디바이스 이름을 수정합니다.")
+    @PostMapping("/webauthn/credentials/{credentialId}/name/update")
+    @Operation(summary = "패스키 이름 수정", description = "등록된 패스키의 디바이스 이름을 수정합니다. (POST 기반)")
     public UnifiedApiResponse<WebAuthnCredentialInfo> updateCredentialName(
             @PathVariable Long credentialId,
             @RequestBody java.util.Map<String, String> request,
@@ -988,8 +986,8 @@ public class AuthController {
         }
     }
     
-    @DeleteMapping("/webauthn/credentials/{credentialId}")
-    @Operation(summary = "패스키 삭제", description = "등록된 패스키를 삭제합니다. 최소 1개의 패스키는 유지해야 합니다.")
+    @PostMapping("/webauthn/credentials/{credentialId}/delete")
+    @Operation(summary = "패스키 삭제", description = "등록된 패스키를 삭제합니다. 최소 1개의 패스키는 유지해야 합니다. (POST 기반)")
     public UnifiedApiResponse<Void> deleteCredential(
             @PathVariable Long credentialId,
             HttpServletRequest httpRequest) {
@@ -1050,8 +1048,8 @@ public class AuthController {
         }
     }
     
-    @PutMapping("/user/profile")
-    @Operation(summary = "사용자 프로필 수정", description = "사용자의 이름, 닉네임, 이메일을 수정합니다.")
+    @PostMapping("/user/profile/update")
+    @Operation(summary = "사용자 프로필 수정", description = "사용자의 이름, 닉네임, 이메일을 수정합니다. (POST 기반)")
     public UnifiedApiResponse<UserInfo> updateUserProfile(
             @RequestBody java.util.Map<String, String> request,
             HttpServletRequest httpRequest) {
@@ -1117,8 +1115,8 @@ public class AuthController {
         }
     }
     
-    @PutMapping("/user/password")
-    @Operation(summary = "비밀번호 변경", description = "사용자의 비밀번호를 변경합니다.")
+    @PostMapping("/user/password/update")
+    @Operation(summary = "비밀번호 변경", description = "사용자의 비밀번호를 변경합니다. (POST 기반)")
     public UnifiedApiResponse<Void> changePassword(
             @RequestBody java.util.Map<String, String> request,
             HttpServletRequest httpRequest) {

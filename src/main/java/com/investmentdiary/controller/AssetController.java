@@ -238,8 +238,8 @@ public class AssetController {
         return ResponseConverter.convert(response, httpRequest.getRequestURI());
     }
     
-    @PutMapping("/fixed-incomes/{id}")
-    @Operation(summary = "고정 수입 수정", description = "고정 수입을 수정합니다.")
+    @PostMapping("/fixed-incomes/{id}/update")
+    @Operation(summary = "고정 수입 수정", description = "고정 수입을 수정합니다. (POST 기반)")
     public UnifiedApiResponse<FixedIncome> updateFixedIncome(
             @Parameter(description = "고정 수입 ID")
             @PathVariable(value = "id") @NotNull String idStr,
@@ -301,8 +301,8 @@ public class AssetController {
         return ResponseConverter.convert(response, httpRequest.getRequestURI());
     }
     
-    @DeleteMapping("/fixed-incomes/{id}")
-    @Operation(summary = "고정 수입 삭제", description = "고정 수입을 삭제합니다.")
+    @PostMapping("/fixed-incomes/{id}/delete")
+    @Operation(summary = "고정 수입 삭제", description = "고정 수입을 삭제합니다. (POST 기반)")
     public UnifiedApiResponse<Void> deleteFixedIncome(
             @Parameter(description = "고정 수입 ID")
             @PathVariable(value = "id") @NotNull String idStr,
@@ -388,8 +388,8 @@ public class AssetController {
         return ResponseConverter.convert(response, httpRequest.getRequestURI());
     }
     
-    @PutMapping("/fixed-expenses/{id}")
-    @Operation(summary = "고정 지출 수정", description = "고정 지출을 수정합니다.")
+    @PostMapping("/fixed-expenses/{id}/update")
+    @Operation(summary = "고정 지출 수정", description = "고정 지출을 수정합니다. (POST 기반)")
     public UnifiedApiResponse<FixedExpense> updateFixedExpense(
             @Parameter(description = "고정 지출 ID")
             @PathVariable(value = "id") @NotNull String idStr,
@@ -451,8 +451,8 @@ public class AssetController {
         return ResponseConverter.convert(response, httpRequest.getRequestURI());
     }
     
-    @DeleteMapping("/fixed-expenses/{id}")
-    @Operation(summary = "고정 지출 삭제", description = "고정 지출을 삭제합니다.")
+    @PostMapping("/fixed-expenses/{id}/delete")
+    @Operation(summary = "고정 지출 삭제", description = "고정 지출을 삭제합니다. (POST 기반)")
     public UnifiedApiResponse<Void> deleteFixedExpense(
             @Parameter(description = "고정 지출 ID")
             @PathVariable(value = "id") @NotNull String idStr,
@@ -623,8 +623,8 @@ public class AssetController {
         return ResponseConverter.convert(response, httpRequest.getRequestURI());
     }
     
-    @DeleteMapping("/monthly-balance")
-    @Operation(summary = "월별 실제 금액 삭제", description = "특정 연도/월의 실제 금액을 삭제합니다.")
+    @PostMapping("/monthly-balance/delete")
+    @Operation(summary = "월별 실제 금액 삭제", description = "특정 연도/월의 실제 금액을 삭제합니다. (POST 기반)")
     public UnifiedApiResponse<Void> deleteMonthlyActualBalance(
             @Parameter(description = "연도")
             @RequestParam(value = "year") @NotNull String yearStr,

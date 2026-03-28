@@ -33,3 +33,8 @@ encryption:
 
 server:
   port: ${SERVER_PORT:8081}
+
+# CORS 허용 origin (쉼표 구분). 미설정 시 application.yml 기본값 사용.
+# app:
+#   cors:
+#     allowed-origins: "http://localhost:3000,https://your-frontend.example.com"
